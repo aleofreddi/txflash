@@ -1,4 +1,6 @@
 # TxFlash
+[![License: BSD-2-Clause](https://img.shields.io/badge/License-BSD%202%20Clause-blue.svg)]
+[![Build Status](https://travis-ci.com/aleofreddi/txflash.svg?branch=master)](https://travis-ci.com/aleofreddi/txflash)
 
 ## Why?
 
@@ -27,10 +29,8 @@ TxFlash' key characteristics:
 
 ## Quickstart
 
-You can install TxFlash via conan:
+You can install TxFlash via [conan](https://conan.io):
 
 ```
 # TODO
 ```
-
-
