@@ -1,0 +1,13 @@
+# CLion
+.idea
+
+# Artifacts
+*.a
+test_package/bin
+
+# CMake
+Makefile
+cmake_install.cmake
+CTestTestfile.cmake
+CMakeCache.txt
+CMakeFiles/

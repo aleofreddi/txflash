@@ -1,0 +1,16 @@
+language: c
+os: linux
+dist: xenial
+
+compiler:
+  - gcc
+
+install:
+  - sudo pip install --ignore-installed conan
+  - conan user
+
+script:
+  - conan install .
+  - cmake . -G "Unix Makefiles"
+  - make all
+  - make test
