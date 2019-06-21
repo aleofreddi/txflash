@@ -10,7 +10,6 @@ class TxFlashConan(ConanFile):
     description = "TxFlash is a header-only library designed to provide a simple way to store and load an opaque configuration using two flash banks"
     exports_sources = ["include/*"]
     no_copy_source = True
-    build_requires = "FakeIt/2.0.4@gasuketsu/stable", "catch2/2.2.2@bincrafters/stable"
 
     def package(self):
         self.copy("*.hh")

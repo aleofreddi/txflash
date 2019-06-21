@@ -9,6 +9,9 @@ install:
   - sudo pip install --ignore-installed conan
   - conan user
 
+before_script:
+  - cd test_package
+
 script:
   - conan install .
   - cmake . -G "Unix Makefiles"
