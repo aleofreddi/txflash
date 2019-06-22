@@ -14,10 +14,10 @@ using txflash::TxFlash;
  *
  * @author Andrea Leofreddi
  */
+template<uint8_t EmptyValue = 0xff>
 class MemoryBank {
 private:
     uint8_t *m_begin, *m_end;
-
     const char *m_id;
 
 public:
@@ -31,7 +31,7 @@ public:
     }
 
     virtual void erase() {
-        memset(m_begin, 0, m_end - m_begin);
+        memset(m_begin, EmptyValue, m_end - m_begin);
     }
 
     virtual void read_chunk(position_t position, void *destination, position_t length) const {
@@ -49,8 +49,9 @@ public:
  * @param bank Bank to spy
  * @return Banked spy
  */
-static fakeit::Mock<MemoryBank> mockMemoryBank(MemoryBank &bank) {
-    fakeit::Mock<MemoryBank> mock(bank);
+template<uint8_t EmptyValue>
+static fakeit::Mock<MemoryBank<EmptyValue>> mockMemoryBank(MemoryBank<EmptyValue> &bank) {
+    fakeit::Mock<MemoryBank<EmptyValue>> mock(bank);
 
     fakeit::Spy(Method(mock, read_chunk));
     fakeit::Spy(Method(mock, erase));
@@ -64,16 +65,16 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "honor empty value")) {
             data0[20] = {},
             data1[20] = {};
 
-    MemoryBank bank0("#0", data0, data0 + sizeof(data0));
-    MemoryBank bank1("#1", data1, data1 + sizeof(data1));
+    MemoryBank<> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<> bank1("#1", data1, data1 + sizeof(data1));
 
-    fakeit::Mock<MemoryBank> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+    fakeit::Mock<MemoryBank<>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
 
     SECTION("erase when empty value does not match (empty value 0)") {
         memset(data0, 0xff, sizeof(data0));
         memset(data1, 0xff, sizeof(data1));
 
-        TxFlash<MemoryBank, MemoryBank, 0>(
+        TxFlash<MemoryBank<>, MemoryBank<>, 0>(
                 mock0.get(),
                 mock1.get(),
                 "!!!!", 5
@@ -86,7 +87,7 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "honor empty value")) {
         memset(data0, 0, sizeof(data0));
         memset(data1, 0, sizeof(data1));
 
-        TxFlash<MemoryBank, MemoryBank, 0>(
+        TxFlash<MemoryBank<>, MemoryBank<>, 0>(
                 mock0.get(),
                 mock1.get(),
                 "!!!!", 5
@@ -99,7 +100,7 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "honor empty value")) {
         memset(data0, 0, sizeof(data0));
         memset(data1, 0, sizeof(data1));
 
-        TxFlash<MemoryBank, MemoryBank, 0xff>(
+        TxFlash<MemoryBank<>, MemoryBank<>, 0xff>(
                 mock0.get(),
                 mock1.get(),
                 "!!!!", 5
@@ -112,7 +113,7 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "honor empty value")) {
         memset(data0, 0xff, sizeof(data0));
         memset(data1, 0xff, sizeof(data1));
 
-        TxFlash<MemoryBank, MemoryBank, 0xff>(
+        TxFlash<MemoryBank<>, MemoryBank<>, 0xff>(
                 mock0.get(),
                 mock1.get(),
                 "!!!!", 5
@@ -130,12 +131,12 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "initialize when both banks are 
     memset(data0, 0, sizeof(data0));
     memset(data1, 0, sizeof(data1));
 
-    MemoryBank bank0("#0", data0, data0 + sizeof(data0));
-    MemoryBank bank1("#1", data1, data1 + sizeof(data1));
+    MemoryBank<> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<> bank1("#1", data1, data1 + sizeof(data1));
 
-    fakeit::Mock<MemoryBank> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+    fakeit::Mock<MemoryBank<>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
 
-    TxFlash<MemoryBank, MemoryBank> tested(
+    TxFlash<MemoryBank<>, MemoryBank<>> tested(
             mock0.get(),
             mock1.get(),
             "!!!!", 5
@@ -166,12 +167,12 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "wrap to next bank when full")) 
     memset(data0, 0, sizeof(data0));
     memset(data1, 0, sizeof(data1));
 
-    MemoryBank bank0("#0", data0, data0 + sizeof(data0));
-    MemoryBank bank1("#1", data1, data1 + sizeof(data1));
+    MemoryBank<> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<> bank1("#1", data1, data1 + sizeof(data1));
 
-    fakeit::Mock<MemoryBank> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+    fakeit::Mock<MemoryBank<>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
 
-    TxFlash<MemoryBank, MemoryBank, 0> tested(
+    TxFlash<MemoryBank<>, MemoryBank<>, 0> tested(
             mock0.get(),
             mock1.get(),
             "0000", 5
@@ -234,12 +235,12 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "handle bank#0 non-empty, bank#1
     memset(data0 + 9, 0, sizeof(data0) - 9);
     memset(data1, 0, sizeof(data1));
 
-    MemoryBank bank0("#0", data0, data0 + sizeof(data0));
-    MemoryBank bank1("#1", data1, data1 + sizeof(data1));
+    MemoryBank<> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<> bank1("#1", data1, data1 + sizeof(data1));
 
-    fakeit::Mock<MemoryBank> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+    fakeit::Mock<MemoryBank<>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
 
-    TxFlash<MemoryBank, MemoryBank, 0> tested(
+    TxFlash<MemoryBank<>, MemoryBank<>, 0> tested(
             mock0.get(),
             mock1.get(),
             "!!!!", 5
@@ -271,12 +272,12 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "handle bank#0 empty, bank#1 non
     memset(data0, 0, sizeof(data0));
     memset(data1 + 9, 0, sizeof(data1) - 9);
 
-    MemoryBank bank0("#0", data0, data0 + sizeof(data0));
-    MemoryBank bank1("#1", data1, data1 + sizeof(data1));
+    MemoryBank<> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<> bank1("#1", data1, data1 + sizeof(data1));
 
-    fakeit::Mock<MemoryBank> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+    fakeit::Mock<MemoryBank<>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
 
-    TxFlash<MemoryBank, MemoryBank, 0> tested(
+    TxFlash<MemoryBank<>, MemoryBank<>, 0> tested(
             mock0.get(),
             mock1.get(),
             "!!!!",
@@ -309,12 +310,12 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "handle bank#0 non-empty, bank#1
     memset(data0 + 9, 0, sizeof(data0) - 9);
     memset(data1 + 9, 0, sizeof(data1) - 9);
 
-    MemoryBank bank0("#0", data0, data0 + sizeof(data0));
-    MemoryBank bank1("#1", data1, data1 + sizeof(data1));
+    MemoryBank<> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<> bank1("#1", data1, data1 + sizeof(data1));
 
-    fakeit::Mock<MemoryBank> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+    fakeit::Mock<MemoryBank<>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
 
-    TxFlash<MemoryBank, MemoryBank, 0> tested(
+    TxFlash<MemoryBank<>, MemoryBank<>, 0> tested(
             mock0.get(),
             mock1.get(),
             "!!!!", 5
@@ -346,12 +347,12 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "recover when header is invalid"
     memset(data0 + 9, 0, sizeof(data0) - 9);
     memset(data1, 0, sizeof(data1));
 
-    MemoryBank bank0("#0", data0, data0 + sizeof(data0));
-    MemoryBank bank1("#1", data1, data1 + sizeof(data1));
+    MemoryBank<> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<> bank1("#1", data1, data1 + sizeof(data1));
 
-    fakeit::Mock<MemoryBank> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+    fakeit::Mock<MemoryBank<>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
 
-    TxFlash<MemoryBank, MemoryBank> tested(
+    TxFlash<MemoryBank<>, MemoryBank<>> tested(
             mock0.get(),
             mock1.get(),
             "!!!!", 5
@@ -385,12 +386,12 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "recover when length is invalid"
     memset(data0 + 9, 0, sizeof(data0) - 9);
     memset(data1 + 9, 0, sizeof(data1) - 9);
 
-    MemoryBank bank0("#0", data0, data0 + sizeof(data0));
-    MemoryBank bank1("#1", data1, data1 + sizeof(data1));
+    MemoryBank<> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<> bank1("#1", data1, data1 + sizeof(data1));
 
-    fakeit::Mock<MemoryBank> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+    fakeit::Mock<MemoryBank<>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
 
-    TxFlash<MemoryBank, MemoryBank> tested(
+    TxFlash<MemoryBank<>, MemoryBank<>> tested(
             mock0.get(),
             mock1.get(),
             "!!!!", 5
@@ -424,12 +425,12 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash::reset, "reset the flash")) {
     memset(data0 + 9, 0, sizeof(data0) - 9);
     memset(data1 + 9, 0, sizeof(data1) - 9);
 
-    MemoryBank bank0("#0", data0, data0 + sizeof(data0));
-    MemoryBank bank1("#1", data1, data1 + sizeof(data1));
+    MemoryBank<> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<> bank1("#1", data1, data1 + sizeof(data1));
 
-    fakeit::Mock<MemoryBank> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+    fakeit::Mock<MemoryBank<>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
 
-    TxFlash<MemoryBank, MemoryBank, 0> tested(
+    TxFlash<MemoryBank<>, MemoryBank<>, 0> tested(
             mock0.get(),
             mock1.get(),
             "!!!!", 5

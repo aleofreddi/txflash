@@ -59,37 +59,68 @@ private:
     State fast_forward();
 
 public:
-    TxFlash(Bank0 &bank0, Bank1 &bank1, const void *default_payload, position_t length)
-            : m_bank0(bank0), m_bank1(bank1), m_default_payload(default_payload), m_default_payload_length(length) {
-        State state = parse();
+    /**
+     * Initialize the transaction flash using the given flash banks. The default configuration will be used when flash is empty or an unrecoverable error
+     * happenes.
+     *
+     * \param bank0 1st bank
+     * \param bank1 2nd bank
+     * \param default_payload Default configuration payload
+     * \param length  Default configuration length
+     */
+    TxFlash(Bank0 &bank0, Bank1 &bank1, const void *default_payload, position_t length);
 
-        TX_FLASH_DEBUG("Parsed flash, state %i, read index 0x%x@#%i, write index 0x%x@#%i\n", state, m_read_position, m_read_bank, m_write_position, m_write_bank);
-
-        switch (state) {
-            case State::INVALID:
-                TX_FLASH_DEBUG("Flash content is invalid\n");
-                reset();
-                break;
-
-            case State::EMPTY:
-                TX_FLASH_DEBUG("Initializing empty flash with default payload\n");
-                write(default_payload, length);
-                break;
-        }
-    }
-
-    //! Retrieve configuration lenght
+    /**
+     * Retrieve the current configuration length.
+     *
+     * \return Configuration length
+     */
     position_t length() const;
 
-    //! Read configuration
+    /**
+     * Load configuration and copies it into the destination buffer, which must be able to contain at least length() bytes.
+     *
+     * \param destination Destination buffer where to store the configuration
+     */
     void read(void *destination) const;
 
-    //! Write configuration
+    /**
+     * Store a new configuration.
+     *
+     * \param payload The configuration to store
+     * \param length Length of the configuration to store
+     * \return True if the operations succeed, else return false (eg. when the payload doesn't fit the flash due to excessive length)
+     */
     bool write(const void *payload, position_t length);
 
-    //! Reset configuration to default value
+    /**
+     * Reset the configuration to the default one.
+     */
     void reset();
 };
+
+template<typename Bank0, typename Bank1, uint8_t EmptyValue>
+TxFlash<Bank0, Bank1, EmptyValue>::TxFlash(Bank0 &bank0, Bank1 &bank1, const void *default_payload, typename TxFlash<Bank0, Bank1, EmptyValue>::position_t length)
+        : m_bank0(bank0), m_bank1(bank1), m_default_payload(default_payload), m_default_payload_length(length) {
+    State state = parse();
+
+    TX_FLASH_DEBUG("Parsed flash, state %i, read index 0x%x@#%i, write index 0x%x@#%i\n", state, m_read_position, m_read_bank, m_write_position, m_write_bank);
+
+    switch (state) {
+        case State::INVALID:
+            TX_FLASH_DEBUG("Flash content is invalid\n");
+            reset();
+            break;
+
+        case State::EMPTY:
+            TX_FLASH_DEBUG("Initializing empty flash with default payload\n");
+            write(default_payload, length);
+            break;
+
+        default:
+            break;
+    }
+}
 
 template<typename Bank0, typename Bank1, uint8_t EmptyValue>
 typename TxFlash<Bank0, Bank1, EmptyValue>::State TxFlash<Bank0, Bank1, EmptyValue>::fast_forward() {
@@ -193,8 +224,7 @@ void TxFlash<Bank0, Bank1, EmptyValue>::write_chunk(Bank bank, position_t positi
 template<typename Bank0, typename Bank1, uint8_t EmptyValue>
 void TxFlash<Bank0, Bank1, EmptyValue>::read(void *destination) const {
     position_t length = this->length();
-    return read_chunk(m_read_bank, m_read_position + 1 /* header */ + sizeof(position_t) /* length */, destination,
-                      length);
+    return read_chunk(m_read_bank, m_read_position + 1 /* header */ + sizeof(position_t) /* length */, destination, length);
 }
 
 template<typename Bank0, typename Bank1, uint8_t EmptyValue>
@@ -205,14 +235,12 @@ bool TxFlash<Bank0, Bank1, EmptyValue>::write(const void *payload, position_t le
         return false;
     }
 
-    if (remaining(m_write_bank, m_write_position) >=
-        1 /* header */ + sizeof(position_t) /* length */ + length /* payload */ + 1 /* next header */) {
+    if (remaining(m_write_bank, m_write_position) >= 1 /* header */ + sizeof(position_t) /* length */ + length /* payload */ + 1 /* next header */) {
         // Write length
         write_chunk(m_write_bank, m_write_position + 1 /* header */, &length, sizeof(position_t));
 
         // Write payload
-        write_chunk(m_write_bank, m_write_position + 1 /* header */ + sizeof(position_t) /* length */, payload,
-                    length);
+        write_chunk(m_write_bank, m_write_position + 1 /* header */ + sizeof(position_t) /* length */, payload, length);
 
         // Write header
         Header header = Header::RECORD;
