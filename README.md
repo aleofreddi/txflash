@@ -29,8 +29,38 @@ TxFlash' key characteristics:
 
 ## Quickstart
 
-You can install TxFlash via [conan](https://conan.io):
+You can install TxFlash via [conan](https://conan.io), add the following dependency to your conanfile:
 
 ```
-# TODO
+TxFlash/0.1@aleofreddi/testing
+```
+
+Then setup the flash banks to use, in this case we are dealing with STM32F4:
+
+```cpp
+#include <tx_flash.hh>
+#include <tx_flash_stm32f4.hh>
+
+...
+
+// Initialize the flash using flash sectors 1 & 2
+const char initial_conf[] = "default configuration";
+auto flash = txflash::make_txflash(
+    txflash::Stm32f4FlashBank<FLASH_SECTOR_1, 0x08008000, 0x8000>(),
+    txflash::Stm32f4FlashBank<FLASH_SECTOR_2, 0x08010000, 0x8000>()
+    initial_conf,
+    sizeof(initial_conf)
+);
+
+// Read back the default value
+assert(flash.length() == sizeof(initial_conf));
+flash.read(tmp);
+assert(std::string(tmp) == initial_conf);
+
+// Now write something new and read it back
+char new_conf[] = "another configuration";
+flash.write(new_conf, sizeof(new_conf));
+assert(flash.length() == sizeof(new_conf));
+flash.read(tmp);
+assert(std::string(tmp) == new_conf);
 ```
