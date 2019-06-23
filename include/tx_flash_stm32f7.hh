@@ -14,33 +14,29 @@ namespace txflash {
 /**
  * Flash bank implementation backed by ST's HAL for the STM32F7 family.
  *
- * Use as follows:
+ * This type is a move-only one.
  *
- * #@code
- * using FlashBank0 = Stm32f7FlashBank<FLASH_SECTOR_1, 0x08008000, 0x8000>;
- * using FlashBank1 = Stm32f7FlashBank<FLASH_SECTOR_2, 0x08010000, 0x8000>;
- *
- * using Flash = TxFlash<FlashBank0, FlashBank1>;
- * #@endcode
+ * \tparam Sector Flash sector number (eg. FLASH_SECTOR_1)
+ * \tparam Address Memory address (eg. 0x08008000)
+ * \tparam Length Length (eg. 0x8000)
  *
  * @author Andrea Leofreddi
  */
 template<uint8_t Sector, uint32_t Address, uint32_t Length>
 class Stm32f7FlashBank {
 public:
+    static const uint8_t empty_value = 0xff;
     using position_t = size_t;
 
-    Stm32f7FlashBank();
+    Stm32f7FlashBank() = default;
+    Stm32f7FlashBank(Stm32f7FlashBank &) = delete;
+    Stm32f7FlashBank(Stm32f7FlashBank &&) = default;
 
     size_t length() const;
     void erase();
     void read_chunk(size_t position, void *destination, size_t length) const;
     void write_chunk(size_t position, const void *payload, size_t length);
 };
-
-template<uint8_t Sector, uint32_t Address, uint32_t Length>
-Stm32f7FlashBank<Sector, Address, Length>::Stm32f7FlashBank() {
-}
 
 template<uint8_t Sector, uint32_t Address, uint32_t Length>
 size_t Stm32f7FlashBank<Sector, Address, Length>::length() const {
