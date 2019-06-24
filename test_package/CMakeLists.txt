@@ -14,8 +14,10 @@ conan_basic_setup()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Enable verbose makefile
-set(CMAKE_VERBOSE_MAKEFILE TRUE)
+# Enable coverage for gcc and clang
+if((CMAKE_CXX_COMPILER_ID STREQUAL "GNU") OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0 -fprofile-arcs -ftest-coverage")
+endif()
 
 include_directories(
         ../include

@@ -14,5 +14,8 @@ conan_basic_setup()
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Produce verbose makefile
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
 enable_testing()
 add_subdirectory(test_package)
