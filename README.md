@@ -41,8 +41,8 @@ TxFlash/0.1@aleofreddi/testing
 Then setup the flash banks to use, in this case we are dealing with STM32F4:
 
 ```cpp
-#include <tx_flash.hh>
-#include <tx_flash_stm32f4.hh>
+#include <txflash.hh>
+#include <txflash_stm32f4.hh>
 
 ...
 
