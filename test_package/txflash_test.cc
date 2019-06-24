@@ -3,7 +3,7 @@
 #include "catch.hpp"
 #include "fakeit.hpp"
 
-#include <tx_flash.hh>
+#include <txflash.hh>
 
 #define CLASS_METHOD_SHOULD(class_, member_function, test) #class_ "::" #member_function " should " test, "[" #class_ "::" #member_function "]" "[" #class_ "]"
 

@@ -27,13 +27,13 @@ add_executable(
         unit_test
 
         # Tested
-        ../include/tx_flash.hh
-        ../include/tx_flash_stm32f4.hh
-        ../include/tx_flash_stm32f7.hh
+        ../include/txflash.hh
+        ../include/txflash_stm32f4.hh
+        ../include/txflash_stm32f7.hh
 
         # Tested
         main.cc
-        tx_flash_test.cc
+        txflash_test.cc
 )
 
 enable_testing()
