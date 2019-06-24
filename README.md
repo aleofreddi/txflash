@@ -1,6 +1,7 @@
 # TxFlash
 ![License: BSD-2-Clause](https://img.shields.io/badge/License-BSD%202%20Clause-blue.svg)
 [![Build Status](https://travis-ci.com/aleofreddi/txflash.svg?branch=master)](https://travis-ci.com/aleofreddi/txflash)
+[![Test Coverage](https://codecov.io/gh/aleofreddi/txflash/branch/master/graph/badge.svg)](https://codecov.io/gh/aleofreddi/txflash)
 
 ## Why?
 
