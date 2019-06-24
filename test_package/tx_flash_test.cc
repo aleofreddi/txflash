@@ -428,6 +428,35 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "recover when length is invalid"
     fakeit::VerifyNoOtherInvocations(Method(mock1, write_chunk));
 }
 
+TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash, "support empty (0-length) default payload")) {
+    char tmp[20],
+            data0[20] = {0},
+            data1[20] = {0};
+
+    MemoryBank<0> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<0> bank1("#1", data1, data1 + sizeof(data1));
+
+    fakeit::Mock<MemoryBank<0>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+
+    auto tested = make_txflash(make_delegate(mock0.get()), make_delegate(mock1.get()), nullptr, 0);
+    REQUIRE(tested.length() == 0);
+}
+
+TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash::write, "return false when payload is too big")) {
+    char tmp[20],
+            data0[20] = {0},
+            data1[20] = {0};
+
+    MemoryBank<0> bank0("#0", data0, data0 + sizeof(data0));
+    MemoryBank<0> bank1("#1", data1, data1 + sizeof(data1));
+
+    fakeit::Mock<MemoryBank<0>> mock0(mockMemoryBank(bank0)), mock1(mockMemoryBank(bank1));
+
+    auto tested = make_txflash(make_delegate(mock0.get()), make_delegate(mock1.get()), nullptr, 0);
+    const char long_payload[] = "this payload won't fit";
+    REQUIRE(tested.write(long_payload, sizeof(long_payload)) == false);
+}
+
 TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash::reset, "reset the flash")) {
     char tmp[20],
             data0[20] = {1, 5, 0, '0', '0', '0', '0', '\0', 0},
@@ -444,7 +473,6 @@ TEST_CASE(CLASS_METHOD_SHOULD(TxFlash, TxFlash::reset, "reset the flash")) {
     auto tested = make_txflash(make_delegate(mock0.get()), make_delegate(mock1.get()), "!!!!", 5);
     // Ensure the existing data has been found
     tested.read(tmp);
-    std::cout << std::string(tmp) << std::endl;
     REQUIRE(std::string(tmp) == "0001");
 
     tested.reset();
