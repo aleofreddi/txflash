@@ -15,7 +15,7 @@ TxFlash is designed exactly to address these problems!
 
 ## What?
 
-TxFlash is a header-only library designed to provide a simple way to store and load an opaque configuration using two flash banks.
+TxFlash is a C++11 header-only library designed to provide a simple way to store and load an opaque configuration using two flash banks.
 
 The library includes also flash bank implementations for STM32F4 and STM32F7 families, but can easily be ported to any mcu.
 
@@ -34,6 +34,8 @@ You can install TxFlash via [conan](https://conan.io), add the following depende
 ```
 TxFlash/0.1@aleofreddi/testing
 ```
+
+*NOTE:* The package has been submitted to conan central but it's not there yet - so you need to clone this repository and install it from the sources using `conan export . aleofreddi/testing && conan install TxFlash/0.1@aleofreddi/testing --build`.
 
 Then setup the flash banks to use, in this case we are dealing with STM32F4:
 
