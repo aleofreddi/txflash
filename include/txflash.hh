@@ -1,13 +1,13 @@
-#ifndef TX_FLASH_HH
-#define TX_FLASH_HH
+#ifndef TXFLASH_HH
+#define TXFLASH_HH
 
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
 #include <type_traits>
 
-#ifndef TX_FLASH_DEBUG
-# define TX_FLASH_DEBUG(...)
+#ifndef TXFLASH_DEBUG
+# define TXFLASH_DEBUG(...)
 #endif
 
 namespace txflash {
@@ -31,8 +31,8 @@ private:
 
     enum class Header : uint8_t {
         EMPTY = empty_value,
-        RECORD = (uint8_t) ((uint16_t) empty_value + 1),
-        SWITCH = (uint8_t) ((uint16_t) empty_value + 2)
+        RECORD = (uint8_t)((uint16_t) empty_value + 1),
+        SWITCH = (uint8_t)((uint16_t) empty_value + 2)
     };
 
     enum class State {
@@ -53,10 +53,15 @@ private:
     position_t m_read_position, m_write_position;
 
     void initialize();
+
     void read_chunk(Bank bank, position_t position, void *destination, position_t length) const;
+
     void write_chunk(Bank bank, position_t position, const void *data, position_t length);
+
     position_t remaining(Bank bank, position_t position);
+
     State parse();
+
     State fast_forward();
 
 public:
@@ -70,7 +75,7 @@ public:
      * \param default_payload Default configuration payload
      * \param length  Default configuration length
      */
-    TxFlash(Bank0 &bank0, Bank1 &bank1, const void *default_payload, position_t length);
+    TxFlash(Bank0 &bank0, Bank1 &bank1, const void *default_payload = nullptr, position_t length = 0);
 
     /**
      * Initialize the transaction flash using the given flash banks. The default configuration will be used when flash is empty or on unrecoverable error.
@@ -82,7 +87,7 @@ public:
      * \param default_payload Default configuration payload
      * \param length  Default configuration length
      */
-    TxFlash(Bank0 &&bank0, Bank1 &&bank1, const void *default_payload, position_t length);
+    TxFlash(Bank0 &&bank0, Bank1 &&bank1, const void *default_payload = nullptr, position_t length = 0);
 
     /**
      * Retrieve the current configuration length.
@@ -129,16 +134,16 @@ template<typename Bank0, typename Bank1>
 void TxFlash<Bank0, Bank1>::initialize() {
     State state = parse();
 
-    TX_FLASH_DEBUG("Parsed flash, state %i, read index 0x%x@#%i, write index 0x%x@#%i\n", state, m_read_position, m_read_bank, m_write_position, m_write_bank);
+    TXFLASH_DEBUG("Parsed flash, state %i, read index 0x%x@#%i, write index 0x%x@#%i\n", state, m_read_position, m_read_bank, m_write_position, m_write_bank);
 
     switch (state) {
         case State::INVALID:
-            TX_FLASH_DEBUG("Flash content is invalid\n");
+            TXFLASH_DEBUG("Flash content is invalid\n");
             reset();
             break;
 
         case State::EMPTY:
-            TX_FLASH_DEBUG("Initializing empty flash with default payload\n");
+            TXFLASH_DEBUG("Initializing empty flash with default payload\n");
             write(m_default_payload, m_default_payload_length);
             break;
 
@@ -154,7 +159,7 @@ typename TxFlash<Bank0, Bank1>::State TxFlash<Bank0, Bank1>::fast_forward() {
 
         if (remaining(m_read_bank, m_read_position) <
             1 /* header */ + sizeof(position_t) /* length */ + 1 /* next header */) {
-            TX_FLASH_DEBUG("Unexpected invalid open record at 0x%x@#%i\n", m_read_position, m_read_bank);
+            TXFLASH_DEBUG("Unexpected invalid open record at 0x%x@#%i\n", m_read_position, m_read_bank);
             return State::INVALID;
         }
 
@@ -162,7 +167,7 @@ typename TxFlash<Bank0, Bank1>::State TxFlash<Bank0, Bank1>::fast_forward() {
         read_chunk(m_read_bank, m_read_position + 1 /* header */, &length, sizeof(position_t));
 
         if (remaining(m_read_bank, m_read_position) < 1 /* header */ + sizeof(position_t) /* length */ + length + 1 /* next header */) {
-            TX_FLASH_DEBUG("Unexpected invalid record length 0x%x at 0x%x@#%i\n", length, m_read_position, m_read_bank);
+            TXFLASH_DEBUG("Unexpected invalid record length 0x%x at 0x%x@#%i\n", length, m_read_position, m_read_bank);
             return State::INVALID;
         }
 
@@ -175,7 +180,7 @@ typename TxFlash<Bank0, Bank1>::State TxFlash<Bank0, Bank1>::fast_forward() {
             break;
 
         if (header != Header::RECORD) {
-            TX_FLASH_DEBUG("Unexpected header 0x%x at 0x%x@#%i\n", header, m_write_position, m_read_bank);
+            TXFLASH_DEBUG("Unexpected header 0x%x at 0x%x@#%i\n", header, m_write_position, m_read_bank);
             return State::INVALID;
         }
 
@@ -198,12 +203,12 @@ typename TxFlash<Bank0, Bank1>::State TxFlash<Bank0, Bank1>::parse() {
     read_chunk(Bank::BANK1, 0, &headerBank1, 1);
 
     // If bank0 seems empty, verify bank1
-    TX_FLASH_DEBUG("Bank0 %s, bank1 %s\n",
-                   headerBank0 == Header::EMPTY ? "empty" : "non-empty",
-                   headerBank1 == Header::EMPTY ? "empty" : "non-empty");
+    TXFLASH_DEBUG("Bank0 %s, bank1 %s\n",
+                  headerBank0 == Header::EMPTY ? "empty" : "non-empty",
+                  headerBank1 == Header::EMPTY ? "empty" : "non-empty");
 
     if (headerBank0 == Header::EMPTY && headerBank1 == Header::EMPTY) {
-        TX_FLASH_DEBUG("Empty flash, initializing with default payload\n");
+        TXFLASH_DEBUG("Empty flash, initializing with default payload\n");
         return State::EMPTY;
     } else if (headerBank0 == Header::EMPTY && headerBank1 == Header::RECORD) {
         m_read_bank = m_write_bank = Bank::BANK1;
@@ -214,7 +219,7 @@ typename TxFlash<Bank0, Bank1>::State TxFlash<Bank0, Bank1>::parse() {
         m_read_bank = m_write_bank = Bank::BANK1;
         return fast_forward();
     } else {
-        TX_FLASH_DEBUG("Corrupted, unrecoverable payload. Initializing with default payload\n");
+        TXFLASH_DEBUG("Corrupted, unrecoverable payload. Initializing with default payload\n");
         return State::INVALID;
     }
 }
@@ -256,7 +261,7 @@ template<typename Bank0, typename Bank1>
 bool TxFlash<Bank0, Bank1>::write(const void *payload, position_t length) {
     if (std::min(remaining(Bank::BANK0, 0), remaining(Bank::BANK1, 0)) <
         1 /* header */ + sizeof(position_t) /* length */ + length /* payload */ + 1 /* next header */) {
-        TX_FLASH_DEBUG("Payload exceeds bank size\n");
+        TXFLASH_DEBUG("Payload exceeds bank size\n");
         return false;
     }
 
@@ -305,7 +310,7 @@ bool TxFlash<Bank0, Bank1>::write(const void *payload, position_t length) {
 
 template<typename Bank0, typename Bank1>
 void TxFlash<Bank0, Bank1>::reset() {
-    TX_FLASH_DEBUG("Resetting flash to default value\n");
+    TXFLASH_DEBUG("Resetting flash to default value\n");
 
     m_bank0.erase();
     m_bank1.erase();
@@ -350,4 +355,4 @@ TxFlash<
 
 }
 
-#endif //TX_FLASH_HH
+#endif //TXFLASH_HH

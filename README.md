@@ -1,5 +1,5 @@
 # TxFlash
-![License: BSD-2-Clause](https://img.shields.io/badge/License-BSD%202%20Clause-blue.svg)
+[![License: BSD-2-Clause](https://img.shields.io/badge/License-BSD%202%20Clause-blue.svg)](https://opensource.org/licenses/BSD-2-Clause)
 [![Build Status](https://travis-ci.com/aleofreddi/txflash.svg?branch=master)](https://travis-ci.com/aleofreddi/txflash)
 [![Test Coverage](https://codecov.io/gh/aleofreddi/txflash/branch/master/graph/badge.svg)](https://codecov.io/gh/aleofreddi/txflash)
 
@@ -46,7 +46,7 @@ Then setup the flash banks to use, in this case we are dealing with STM32F4:
 
 ...
 
-// Initialize the flash using flash sectors 1 & 2
+// Initialize the flash using flash sectors 1 & 2 with a default configuration
 const char initial_conf[] = "default configuration";
 auto flash = txflash::make_txflash(
     txflash::Stm32f4FlashBank<FLASH_SECTOR_1, 0x08008000, 0x8000>(),
@@ -66,4 +66,36 @@ flash.write(new_conf, sizeof(new_conf));
 assert(flash.length() == sizeof(new_conf));
 flash.read(tmp);
 assert(std::string(tmp) == new_conf);
+```
+
+Since you are now using flash banks to store data, you need to ensure that the linker won't place code over there. Follows an example for GNU (arm) ld to allocate the first two bank sectors for TxFlash:
+
+```ld
+/* Define output sections */
+SECTIONS
+{
+  .isr_vector :
+  {
+    . = ALIGN(4);
+    KEEP(*(.isr_vector))
+    . = ALIGN(4);
+  } >FLASH
+
+  .flash_bank_1 :
+  {
+    . = ALIGN(0x8000);
+    KEEP(*(.flash_bank_1)) /* <-- Flash bank 1, reserved for TxFlash */
+    . += 0x8000;
+  } >FLASH
+
+  .flash_bank_2 :
+  {
+    KEEP(*(.flash_bank_2)) /* <-- Flash bank 2, reserved for TxFlash */
+    . += 0x8000;
+  } >FLASH
+
+  .text :
+  {
+    . = ALIGN(4); /* Text section: start after flash bank 2 */
+  //-- cut --//
 ```
