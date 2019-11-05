@@ -1,5 +1,5 @@
-#ifndef TX_FLASH_STM32F4_HH
-#define TX_FLASH_STM32F4_HH
+#ifndef TXFLASH_STM32F4_HH
+#define TXFLASH_STM32F4_HH
 
 #include <cassert>
 #include <cstdint>
@@ -78,4 +78,4 @@ void Stm32f4FlashBank<Sector, Address, Length>::write_chunk(size_t position, con
 
 }
 
-#endif //TX_FLASH_STM32F4_HH
+#endif //TXFLASH_STM32F4_HH
